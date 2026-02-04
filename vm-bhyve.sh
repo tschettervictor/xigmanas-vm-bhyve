@@ -6,15 +6,17 @@
 # date:         2023-05-22	Refactoring, add column
 # date:         2023-11-30	FreeBSD bug workaround.
 #               ZfS volume with volmode=dev may not appear in dev/zvol until reboot
+# date:         2026-02-04  Updated for XigmaNAS 13.3.0.5
 # purpose:      Install vm-bhyve on XigmaNAS 13 (embedded version).
 #
 #----------------------- Set variables ------------------------------------------------------------------
 DIR=`dirname $0`;
+All="All/Hashed"
 #----------------------- Set Errors ---------------------------------------------------------------------
 _msg() { case $@ in
   0) echo "The script will exit now."; exit 0 ;;
   1) echo "No route to server, or file do not exist on server"; _msg 0 ;;
-  2) echo "Can't find ${PKG}-*.pkg on ${DIR}/All"; _msg 0 ;;
+  2) echo "Can't find ${PKG}-*.pkg on ${DIR}/${All}"; _msg 0 ;;
   3) echo "vm-bhyve installed and ready!)"; exit 0 ;;
   4) echo "Always run this script using the full path: /mnt/.../directory/vm-bhyve.sh"; _msg 0 ;;
 esac ; exit 0; }
@@ -23,12 +25,12 @@ if [ ! `echo $0 |cut -c1-5` = "/mnt/" ]; then _msg 4 ; fi
 cd $DIR;
 #----------------------- Download ca_root_nss if needed and install -------------------------------------
 PKG="ca_root_nss"
-if [ ! -e ${DIR}/All/${PKG}-*.pkg ]; then pkg fetch -o ${DIR} -y ${PKG} || _msg 1; fi
-if [ -f ${DIR}/All/${PKG}-*.pkg ]; then pkg add `ls ${DIR}/All/${PKG}-*.pkg` || _msg 2; fi
+if [ ! -e ${DIR}/${All}/${PKG}-*.pkg ]; then pkg fetch -o ${DIR} -y ${PKG} || _msg 1; fi
+if [ -f ${DIR}/${All}/${PKG}-*.pkg ]; then pkg add `ls ${DIR}/${All}/${PKG}-*.pkg` || _msg 2; fi
 #----------------------- Download vm-bhyve if needed and install -----------------------------------------
 PKG="vm-bhyve"
-if [ ! -e ${DIR}/All/${PKG}-*.pkg ]; then pkg fetch -o ${DIR} -y ${PKG} || _msg 1; fi
-if [ -f ${DIR}/All/${PKG}-*.pkg ]; then pkg add `ls ${DIR}/All/${PKG}-*.pkg` || _msg 2; fi
+if [ ! -e ${DIR}/${All}/${PKG}-*.pkg ]; then pkg fetch -o ${DIR} -y ${PKG} || _msg 1; fi
+if [ -f ${DIR}/${All}/${PKG}-*.pkg ]; then pkg add `ls ${DIR}/${All}/${PKG}-*.pkg` || _msg 2; fi
 #----------------------- FreeBSD bug workaround ----------------------------------------------------------
 PKG="/usr/local/lib/vm-bhyve/vm-zfs"
 mv ${PKG} ${PKG}.bak
@@ -36,8 +38,8 @@ sed 's/volmode=dev/volmode=geom/' ${PKG}.bak > ${PKG}
 #----------------------- Download and decompress edk2-bhyve files if needed ------------------------------
 PKG="edk2-bhyve"
 if [ ! -d ${DIR}/usr/local/share/edk2-bhyve ]; then
-  if [ ! -e ${DIR}/All/${PKG}-*.pkg ]; then pkg fetch -o ${DIR} -y ${PKG} || _msg 1; fi
-  if [ -f ${DIR}/All/${PKG}-*.pkg ]; then tar xzf ${DIR}/All/${PKG}-*.pkg || _msg 2;
+  if [ ! -e ${DIR}/${All}/${PKG}-*.pkg ]; then pkg fetch -o ${DIR} -y ${PKG} || _msg 1; fi
+  if [ -f ${DIR}/${All}/${PKG}-*.pkg ]; then tar xzf ${DIR}/${All}/${PKG}-*.pkg || _msg 2;
     rm -R ${DIR}/usr/local/share/licenses; rm -R ${DIR}/usr/local/share/uefi-firmware;
     rm ${DIR}/+*; fi
   if [ ! -d ${DIR}/usr/local/share/edk2-bhyve ]; then _msg 4; fi
